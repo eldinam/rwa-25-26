@@ -35,6 +35,7 @@ router.get("/object", function (req, res, next) {
   const funFact = facts.get(options);
 
   console.log(funFact);
+  console.log("test");
 
   res.render("fun-facts-object", {
     title: "FACTS",
