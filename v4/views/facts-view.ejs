@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="bs">
+  <head>
+    <meta charset="UTF-8" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <link rel="stylesheet" href="/stylesheets/facts-view.css" />
+  </head>
+  <body class="<%= theme %>">
+    <div class="container">
+      <div class="header">
+        <h1><%= emoji %> <%= title %> <%= emoji %></h1>
+      </div>
+
+      <div class="meta">
+        <span><strong>Ruta:</strong> <%= payload.route %></span>
+        <span><strong>Izvor:</strong> <%= payload.source %></span>
+        <span><strong>Broj:</strong> <%= payload.count %></span>
+        <%
+          const d = new Date(payload.timestamp);
+          const pad = (n) => String(n).padStart(2, "0");
+          const formatted = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        %>
+        <span><strong>Vrijeme:</strong> <%= formatted %></span>
+      </div>
+
+      <% payload.data.forEach(function(item, i) { %>
+        <div class="card">
+          <span class="num">#<%= i + 1 %></span>
+          <%= item.text %>
+        </div>
+      <% }); %>
+
+      <div class="nav">
+        <a href="/">🏠 Home</a>
+        <a href="/cat">🐱 Cat</a>
+        <a href="/dog">🐶 Dog</a>
+        <a href="/chuck">🥋 Chuck</a>
+        <a href="<%= payload.route %>?json=1">📄 JSON</a>
+        <a href="/routes">📋 Sve rute</a>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <p><a href="/">🏠 Home</a></p>
+    <h1><%= title %></h1>
+    <p>FACTS LIST</p>
+
+    <% const dataFromJson = JSON.parse(listObjects) %>
+
+    <% for(let i=0; i<dataFromJson.length; i++) { %>
+          <p>Fact text: <%= dataFromJson[i].fact %></p>
+          <p>Fact description: <%= dataFromJson[i].desc %></p>
+          <hr>
+    <% } %>
+
+  </body>
+</html>

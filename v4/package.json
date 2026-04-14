@@ -1,0 +1,21 @@
+{
+  "name": "v2",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "cat-facts": "^1.0.2",
+    "chuck-norris-jokes": "^0.1.1",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dog-facts": "^1.0.3",
+    "ejs": "~2.6.1",
+    "express": "~4.16.1",
+    "express-list-endpoints": "^7.1.1",
+    "fun-facts": "^1.0.5",
+    "http-errors": "~1.6.3",
+    "morgan": "~1.9.1"
+  }
+}
