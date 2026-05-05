@@ -1,0 +1,94 @@
+<!-- ======================================================== -->
+<!-- -V9  Detalji predmeta + lista upisanih studenata          -->
+<!-- ======================================================== -->
+<!--
+  Prikazuje N:M sa "druge strane":
+  Za jedan predmet vidimo SVE studente koji ga slusaju (i njihove ocjene).
+-->
+<!DOCTYPE html>
+<html lang="bs">
+  <head>
+    <meta charset="UTF-8" />
+    <title><%= predmet.naziv %></title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0; padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff; min-height: 100vh;
+      }
+      .container { max-width: 900px; margin: 0 auto; }
+      h1, h2 { margin-top: 0; }
+      h2 { margin-top: 30px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 6px; }
+      .card {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 10px;
+        padding: 18px 22px;
+        margin-bottom: 18px;
+      }
+      .actions { margin: 18px 0; }
+      a.btn {
+        background: rgba(255,255,255,0.2);
+        color: #fff; padding: 8px 14px;
+        text-decoration: none;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.3);
+        font-size: 0.9em;
+      }
+      a.btn:hover { background: rgba(255,255,255,0.35); }
+      table {
+        width: 100%; border-collapse: collapse;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px; overflow: hidden;
+      }
+      th, td {
+        padding: 10px 14px; text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+      }
+      th { background: rgba(0,0,0,0.25); }
+      .empty { opacity: 0.8; font-style: italic; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📚 <%= predmet.naziv %></h1>
+
+      <div class="card">
+        <p><strong>ECTS:</strong> <%= predmet.ects %></p>
+        <p><strong>Broj upisanih studenata:</strong> <%= studenti.length %></p>
+      </div>
+
+      <div class="actions">
+        <a class="btn" href="/predmeti">← Nazad</a>
+        <a class="btn" href="/predmeti/<%= predmet.id %>/uredi">✏️ Uredi</a>
+      </div>
+
+      <h2>👥 Upisani studenti</h2>
+      <% if (studenti.length === 0) { %>
+        <p class="empty">Nema upisanih studenata.</p>
+      <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th>Ime i prezime</th>
+              <th>Broj indeksa</th>
+              <th>Ocjena</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% studenti.forEach(function(s) { %>
+              <tr>
+                <td><%= s.ime %> <%= s.prezime %></td>
+                <td><%= s.broj_indeksa %></td>
+                <td><%= s.ocjena || "—" %></td>
+                <td><a class="btn" href="/studenti/<%= s.id %>">Profil →</a></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,102 @@
+<!-- ======================================================== -->
+<!-- -V5  NOVI FAJL — lista svih studenata iz baze            -->
+<!-- ======================================================== -->
+<!DOCTYPE html>
+<html lang="bs">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Studenti</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        min-height: 100vh;
+      }
+      .container { max-width: 1000px; margin: 0 auto; }
+      h1 { margin-top: 0; }
+      .actions { margin-bottom: 20px; }
+      a.btn, button.btn {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        padding: 10px 16px;
+        text-decoration: none;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.3);
+        cursor: pointer;
+        font-size: 0.95em;
+      }
+      a.btn:hover, button.btn:hover { background: rgba(255,255,255,0.35); }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      th, td {
+        padding: 12px 14px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+      }
+      th { background: rgba(0,0,0,0.25); font-weight: 600; }
+      tr:last-child td { border-bottom: none; }
+      tr:hover td { background: rgba(255,255,255,0.08); }
+      .empty { opacity: 0.8; font-style: italic; padding: 20px 0; }
+      form.inline { display: inline; margin: 0; }
+      .danger {
+        background: rgba(255, 80, 80, 0.3);
+        border-color: rgba(255, 120, 120, 0.5);
+      }
+      .danger:hover { background: rgba(255, 80, 80, 0.5); }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>👥 Studenti</h1>
+
+      <div class="actions">
+        <a class="btn" href="/">← Nazad</a>
+        <a class="btn" href="/studenti/novi">+ Dodaj studenta</a>
+      </div>
+
+      <% if (studenti.length === 0) { %>
+        <p class="empty">Nema unesenih studenata. Klikni "Dodaj studenta".</p>
+      <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ime</th>
+              <th>Prezime</th>
+              <th>Email</th>
+              <th>Broj indeksa</th>
+              <th>Grupa</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% studenti.forEach(function(s) { %>
+              <tr>
+                <td><%= s.id %></td>
+                <td><%= s.ime %></td>
+                <td><%= s.prezime %></td>
+                <td><%= s.email || "—" %></td>
+                <td><%= s.broj_indeksa %></td>
+                <td><%= s.grupa_naziv || "—" %></td>
+                <td>
+                  <form class="inline" method="POST" action="/studenti/<%= s.id %>/obrisi"
+                        onsubmit="return confirm('Obrisati studenta <%= s.ime %> <%= s.prezime %>?');">
+                    <button class="btn danger" type="submit">Obrisi</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </body>
+</html>

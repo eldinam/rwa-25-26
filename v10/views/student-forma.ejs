@@ -1,0 +1,132 @@
+<!-- ======================================================== -->
+<!-- -V9  Forma za unos I izmjenu studenta                    -->
+<!-- ======================================================== -->
+<!--
+  Jedan template za dva slucaja:
+    - student === null  =>  novi unos  (action = /studenti)
+    - student !== null  =>  izmjena    (action = /studenti/:id/uredi)
+  Vrijednosti polja popunjavamo iz `student` objekta (ako postoji).
+-->
+<!DOCTYPE html>
+<html lang="bs">
+  <head>
+    <meta charset="UTF-8" />
+    <title><%= student ? "Uredi studenta" : "Novi student" %></title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        min-height: 100vh;
+      }
+      .container { max-width: 500px; margin: 0 auto; }
+      h1 { margin-top: 0; }
+      option { color: grey }
+      form {
+        background: rgba(255,255,255,0.1);
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.2);
+      }
+      label {
+        display: block;
+        margin-top: 14px;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      input, select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        font-size: 1em;
+      }
+      input::placeholder { color: rgba(255,255,255,0.6); }
+      .row { display: flex; gap: 12px; margin-top: 20px; }
+      button, a.btn {
+        flex: 1;
+        padding: 11px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        font-size: 1em;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+      }
+      button:hover, a.btn:hover { background: rgba(255,255,255,0.35); }
+      .primary { background: rgba(80, 200, 120, 0.4); border-color: rgba(80,200,120,0.6); }
+      .primary:hover { background: rgba(80, 200, 120, 0.6); }
+      .greska {
+        background: rgba(255, 80, 80, 0.3);
+        border: 1px solid rgba(255,120,120,0.5);
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>
+        <% if (student && student.id) { %>
+          ✏️ Uredi studenta
+        <% } else { %>
+          ➕ Novi student
+        <% } %>
+      </h1>
+
+      <% if (greska) { %>
+        <div class="greska">⚠️ <%= greska %></div>
+      <% } %>
+
+      <!--
+        action je ili /studenti (novi) ili /studenti/:id/uredi (izmjena)
+        uredi -> /studenti/:id/uredi  POST
+        novi  -> /studenti            POST
+      -->
+      <form method="POST" action="<%= student && student.id ? '/studenti/' + student.id + '/uredi' : '/studenti' %>">
+        <label for="ime">Ime *</label>
+        <input id="ime" name="ime" type="text" required
+               value="<%= student ? student.ime : '' %>"
+               placeholder="npr. Amina" />
+
+        <label for="prezime">Prezime *</label>
+        <input id="prezime" name="prezime" type="text" required
+               value="<%= student ? student.prezime : '' %>"
+               placeholder="npr. Hodzic" />
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email"
+               value="<%= student && student.email ? student.email : '' %>"
+               placeholder="amina@pmf.unsa.ba" />
+
+        <label for="broj_indeksa">Broj indeksa *</label>
+        <input id="broj_indeksa" name="broj_indeksa" type="text" required
+               value="<%= student ? student.broj_indeksa : '' %>"
+               placeholder="npr. 12345/2025" />
+
+        <label for="grupa_id">Grupa</label>
+        <select id="grupa_id" name="grupa_id">
+          <option value="">— bez grupe —</option>
+          <% grupe.forEach(function(g) { %>
+            <option value="<%= g.id %>"
+              <%= student && Number(student.grupa_id) === g.id ? 'selected' : '' %>>
+              <%= g.naziv %> (godina <%= g.godina %>)
+            </option>
+          <% }); %>
+        </select>
+
+        <div class="row">
+          <a class="btn" href="/studenti">Odustani</a>
+          <button class="primary" type="submit">Sacuvaj</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
