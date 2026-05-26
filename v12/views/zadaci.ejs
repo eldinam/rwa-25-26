@@ -1,0 +1,321 @@
+<!-- ======================================================== -->
+<!-- -V12 AJAX CRUD stranica za zadatke                       -->
+<!-- ======================================================== -->
+<!-- Ova stranica je server-rendered SAMO JEDNOM (kad korisnik -->
+<!-- prvi put dodje na /zadaci). Sve dalje: dodavanje, brisanje, -->
+<!-- toggle "uradjeno" — sve ide kroz fetch() i azurira se DOM   -->
+<!-- bez reload-a.                                                -->
+<!--                                                              -->
+<!-- Uporedi ovo sa views/studenti.ejs (klasicni form CRUD iz v9).-->
+<!DOCTYPE html>
+<html lang="bs">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Zadaci (AJAX CRUD)</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        min-height: 100vh;
+      }
+      .container { max-width: 800px; margin: 0 auto; }
+      h1 { margin-top: 0; }
+      .actions { margin-bottom: 20px; }
+      a.btn, button.btn {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        padding: 10px 16px;
+        text-decoration: none;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.3);
+        cursor: pointer;
+        font-size: 0.95em;
+      }
+      a.btn:hover, button.btn:hover { background: rgba(255,255,255,0.35); }
+
+      .info {
+        background: rgba(0,0,0,0.25);
+        border-left: 4px solid #ffd54f;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 0.9em;
+        opacity: 0.95;
+      }
+
+      /* Forma za dodavanje */
+      .nova-forma {
+        background: rgba(255,255,255,0.12);
+        padding: 16px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: grid;
+        gap: 10px;
+      }
+      .nova-forma input, .nova-forma textarea {
+        background: rgba(0,0,0,0.25);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: 6px;
+        font-size: 1em;
+        font-family: inherit;
+      }
+      .nova-forma input::placeholder, .nova-forma textarea::placeholder {
+        color: rgba(255,255,255,0.6);
+      }
+      .nova-forma .row { display: flex; gap: 10px; }
+      .nova-forma .row > * { flex: 1; }
+
+      /* Lista zadataka */
+      .zadatak-card {
+        background: rgba(255,255,255,0.12);
+        padding: 14px 16px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        transition: opacity 0.2s;
+      }
+      .zadatak-card.uradjeno { opacity: 0.5; }
+      .zadatak-card.uradjeno .naslov { text-decoration: line-through; }
+      .zadatak-card .body { flex: 1; }
+      .zadatak-card .naslov { font-weight: 600; font-size: 1.05em; }
+      .zadatak-card .meta { font-size: 0.85em; opacity: 0.8; margin-top: 4px; }
+      .zadatak-card input[type=checkbox] {
+        width: 22px; height: 22px; margin-top: 2px; cursor: pointer;
+      }
+      .zadatak-card .danger {
+        background: rgba(255, 80, 80, 0.3);
+        border-color: rgba(255, 120, 120, 0.5);
+      }
+      .zadatak-card .danger:hover { background: rgba(255, 80, 80, 0.5); }
+
+      .empty { opacity: 0.7; font-style: italic; padding: 20px 0; text-align: center; }
+      .loading { opacity: 0.7; text-align: center; padding: 20px 0; }
+      .greska {
+        background: rgba(255, 80, 80, 0.25);
+        border: 1px solid rgba(255, 120, 120, 0.5);
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin-bottom: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>✅ Zadaci <small style="opacity:0.7;font-size:0.5em;">— AJAX CRUD demo</small></h1>
+
+      <div class="actions">
+        <a class="btn" href="/">← Nazad</a>
+      </div>
+
+      <div class="info">
+        <strong>Sta je drugacije od /studenti?</strong><br />
+        Stranica se ucitava SAMO jednom. Sve operacije (dodavanje, brisanje, oznacavanje)
+        idu preko <code>fetch()</code> na <code>/api/zadaci</code>. Nema reload-a, nema redirect-a.
+        Otvori DevTools (F12) → Network tab da vidis HTTP pozive.
+      </div>
+
+      <!-- Mjesto za prikaz greske -->
+      <div id="greska" class="greska" style="display:none;"></div>
+
+      <!-- Forma za novi zadatak (vanilla HTML, ALI ne salje se klasicnom POST formom) -->
+      <form id="nova-forma" class="nova-forma">
+        <input type="text" name="naslov" placeholder="Naslov zadatka (obavezno)" required />
+        <textarea name="opis" placeholder="Opis (opciono)" rows="2"></textarea>
+        <div class="row">
+          <input type="date" name="rok" />
+          <button type="submit" class="btn">+ Dodaj zadatak</button>
+        </div>
+      </form>
+
+      <!-- Lista zadataka - prazan div koji ce popuniti JS -->
+      <div id="lista">
+        <div class="loading">Ucitavanje...</div>
+      </div>
+    </div>
+
+    <!-- ====================================================== -->
+    <!-- -V12  AJAX LOGIKA                                        -->
+    <!-- ====================================================== -->
+    <!-- Sve sto slijedi je vanilla JavaScript koji se izvrsava   -->
+    <!-- U BROWSERU (ne u Node.js). Koristimo:                    -->
+    <!--   - fetch() za HTTP pozive na backend                    -->
+    <!--   - async/await za citljivije asinhrone funkcije         -->
+    <!--   - destructuring, arrow funkcije, template literali     -->
+    <!--   (sve iz v11 PDF-a o modernom JS-u)                     -->
+    <script>
+      // =====================================================
+      // POMOCNA FUNKCIJA: pozovi API + obradi gresku
+      // =====================================================
+      // Centralizujemo fetch logiku da je ne ponavljamo 4 puta.
+      // Vraca podatak iz odgovora ili baca gresku.
+      async function api(url, options = {}) {
+        // Spread + default: ako pozivalac proslijedi headers,
+        // mi dodajemo Content-Type pored njegovih (ako nije vec tu).
+        const opts = {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {}),
+          },
+        };
+
+        // fetch() vraca Promise koji se rijesi sa Response objektom.
+        // await ceka da Promise zavrsi - bez "then" lanaca.
+        const response = await fetch(url, opts);
+        const json = await response.json();
+
+        // Server vraca { ok: true, data: ... } ili { ok: false, error: ... }
+        if (!json.ok) {
+          throw new Error((json.error && json.error.message) || "Greska");
+        }
+        return json.data;
+      }
+
+      // =====================================================
+      // PRIKAZI GRESKU u crvenom div-u na vrhu
+      // =====================================================
+      function prikaziGresku(poruka) {
+        const el = document.getElementById("greska");
+        el.textContent = poruka;
+        el.style.display = "block";
+        // Sakrij nakon 4 sekunde
+        setTimeout(() => (el.style.display = "none"), 4000);
+      }
+
+      // =====================================================
+      // RENDERUJ JEDAN ZADATAK kao HTML card
+      // =====================================================
+      // Vraca DOM element (ne string). Tako se lakse kacimo
+      // na event listenere bez "onclick" stringova.
+      function napraviKarticu(z) {
+        const card = document.createElement("div");
+        card.className = "zadatak-card" + (z.uradjeno ? " uradjeno" : "");
+        card.dataset.id = z.id; // pohranimo id u data atributu
+
+        // Template literal sa ${} - cisto za HTML.
+        // Paznja: ovo je samo HTML, NE saljemo korisnicki unos
+        // u serverski upit, ali POSTOJI XSS rizik ako naslov
+        // sadrzi <script>. Zato koristimo textContent dolje.
+        card.innerHTML = `
+          <input type="checkbox" ${z.uradjeno ? "checked" : ""} />
+          <div class="body">
+            <div class="naslov"></div>
+            <div class="meta"></div>
+          </div>
+          <button class="btn danger">Obrisi</button>
+        `;
+
+        // SIGURNO postavi tekst (textContent NE interpretira HTML)
+        card.querySelector(".naslov").textContent = z.naslov;
+
+        const metaText = [
+          z.opis ? z.opis : null,
+          z.rok ? "rok: " + z.rok : null,
+        ].filter(Boolean).join(" • ");
+        card.querySelector(".meta").textContent = metaText;
+
+        // Event listener: checkbox toggle uradjeno
+        card.querySelector("input[type=checkbox]").addEventListener("change", async (e) => {
+          try {
+            const novi = await api("/api/zadaci/" + z.id, {
+              method: "PUT",
+              body: JSON.stringify({ uradjeno: e.target.checked }),
+            });
+            // Update lokalnog state-a (card) bez ponovnog ucitavanja
+            card.classList.toggle("uradjeno", !!novi.uradjeno);
+          } catch (err) {
+            prikaziGresku(err.message);
+            e.target.checked = !e.target.checked; // vrati checkbox
+          }
+        });
+
+        // Event listener: dugme Obrisi
+        card.querySelector("button.danger").addEventListener("click", async () => {
+
+          try {
+            await api("/api/zadaci/" + z.id, { method: "DELETE" });
+            card.remove(); // ukloni iz DOM-a bez reload-a
+          } catch (err) {
+            prikaziGresku(err.message);
+          }
+        });
+
+        return card;
+      }
+
+      // =====================================================
+      // UCITAJ sve zadatke (GET) i renderuj listu
+      // =====================================================
+      async function ucitajZadatke() {
+        const lista = document.getElementById("lista");
+        lista.innerHTML = '<div class="loading">Ucitavanje...</div>';
+
+        try {
+          const zadaci = await api("/api/zadaci");
+
+          // Isprazni listu
+          lista.innerHTML = "";
+
+          if (zadaci.length === 0) {
+            lista.innerHTML = '<div class="empty">Nemas zadataka. Dodaj prvi gore.</div>';
+            return;
+          }
+
+          // .forEach iz modernog JS-a (v11 lekcija)
+          zadaci.forEach((z) => {
+            lista.appendChild(napraviKarticu(z));
+          });
+        } catch (err) {
+          lista.innerHTML = "";
+          prikaziGresku(err.message);
+        }
+      }
+
+      // =====================================================
+      // FORMA: submit -> POST /api/zadaci
+      // =====================================================
+      // Klasicna HTML forma bi napravila full-page POST + redirect.
+      // Mi blokiramo default (e.preventDefault()) i radimo fetch.
+      document.getElementById("nova-forma").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // FormData je ugradjeni Web API koji procita sva polja forme.
+        // Object.fromEntries pretvori u plain objekat: { naslov, opis, rok }.
+        const formData = new FormData(e.target);
+        const podaci = Object.fromEntries(formData);
+
+        try {
+          const novi = await api("/api/zadaci", {
+            method: "POST",
+            body: JSON.stringify(podaci),
+          });
+
+          // Dodaj novi card NA VRH liste
+          const lista = document.getElementById("lista");
+          // Ako je lista bila prazna ("Nemas zadataka..."), ocisti
+          if (lista.querySelector(".empty")) lista.innerHTML = "";
+          lista.prepend(napraviKarticu(novi));
+
+          // Resetuj formu
+          e.target.reset();
+        } catch (err) {
+          prikaziGresku(err.message);
+        }
+      });
+
+      // =====================================================
+      // POKRENI: ucitaj listu cim se stranica otvori
+      // =====================================================
+      // Ovo je "entry point" stranice - prvi poziv na backend.
+      ucitajZadatke();
+    </script>
+  </body>
+</html>

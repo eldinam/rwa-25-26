@@ -1,0 +1,155 @@
+<!-- ======================================================== -->
+<!-- -V9  Detalji studenta + lista predmeta (N:M veza)        -->
+<!-- ======================================================== -->
+<!--
+  Prikazujemo:
+    1) osnovne podatke o studentu + grupu
+    2) tabelu predmeta KOJE STUDENT VEC SLUSA (sa ocjenom),
+       sa formama za promjenu ocjene i ispis sa predmeta
+    3) dropdown sa predmetima na koje student JOS NIJE upisan,
+       i dugme "Upisi" za dodavanje veze (INSERT u student_predmet)
+-->
+<!DOCTYPE html>
+<html lang="bs">
+  <head>
+    <meta charset="UTF-8" />
+    <title><%= student.ime %> <%= student.prezime %></title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        min-height: 100vh;
+      }
+      .container { max-width: 900px; margin: 0 auto; }
+      h1, h2 { margin-top: 0; }
+      h2 { margin-top: 30px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 6px; }
+      .card {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 10px;
+        padding: 18px 22px;
+        margin-bottom: 18px;
+      }
+      .actions { margin: 18px 0; }
+      a.btn, button.btn {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        padding: 8px 14px;
+        text-decoration: none;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.3);
+        cursor: pointer;
+        font-size: 0.9em;
+      }
+      a.btn:hover, button.btn:hover { background: rgba(255,255,255,0.35); }
+      .danger { background: rgba(255, 80, 80, 0.3); border-color: rgba(255, 120, 120, 0.5); }
+      .danger:hover { background: rgba(255, 80, 80, 0.5); }
+      .primary { background: rgba(80, 200, 120, 0.4); border-color: rgba(80,200,120,0.6); }
+      .primary:hover { background: rgba(80, 200, 120, 0.6); }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      th, td {
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+      }
+      th { background: rgba(0,0,0,0.25); }
+      tr:last-child td { border-bottom: none; }
+      form.inline { display: inline; margin: 0; }
+      input[type=number], select {
+        width: 80px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+      }
+      .upisi-form select { width: auto; min-width: 280px; }
+      .empty { opacity: 0.8; font-style: italic; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>👤 <%= student.ime %> <%= student.prezime %></h1>
+
+      <div class="card">
+        <p><strong>Broj indeksa:</strong> <%= student.broj_indeksa %></p>
+        <p><strong>Email:</strong> <%= student.email || "—" %></p>
+        <p><strong>Grupa:</strong> <%= student.grupa_naziv || "—" %></p>
+      </div>
+
+      <div class="actions">
+        <a class="btn" href="/studenti">← Nazad na listu</a>
+        <a class="btn" href="/studenti/<%= student.id %>/uredi">✏️ Uredi</a>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- N:M sekcija: predmeti koje student vec slusa          -->
+      <!-- ===================================================== -->
+      <h2>📚 Upisani predmeti</h2>
+
+      <% if (upisani.length === 0) { %>
+        <p class="empty">Student nije upisan ni na jedan predmet.</p>
+      <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th>Predmet</th>
+              <th>ECTS</th>
+              <th>Ocjena</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% upisani.forEach(function(p) { %>
+              <tr>
+                <td><%= p.naziv %></td>
+                <td><%= p.ects %></td>
+                <td>
+                  <!-- Forma za upis/promjenu ocjene -->
+                  <form class="inline" method="POST"
+                        action="/studenti/<%= student.id %>/predmeti/<%= p.id %>/ocjena">
+                    <input type="number" name="ocjena" min="5" max="10"
+                           value="<%= p.ocjena || '' %>" placeholder="—" />
+                    <button class="btn primary" type="submit">Snimi</button>
+                  </form>
+                </td>
+                <td>
+                  <!-- Forma za ispis sa predmeta (DELETE iz spojne tabele) -->
+                  <form class="inline" method="POST"
+                        action="/studenti/<%= student.id %>/predmeti/<%= p.id %>/obrisi"
+                        onsubmit="return confirm('Ispisati studenta sa predmeta <%= p.naziv %>?');">
+                    <button class="btn danger" type="submit">Ispisi</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } %>
+
+      <!-- ===================================================== -->
+      <!-- Dropdown za upis na novi predmet                       -->
+      <!-- ===================================================== -->
+      <% if (dostupni.length > 0) { %>
+        <h2>➕ Upisi na novi predmet</h2>
+        <form class="upisi-form" method="POST" action="/studenti/<%= student.id %>/predmeti">
+          <select name="predmet_id" required>
+            <% dostupni.forEach(function(p) { %>
+              <option value="<%= p.id %>"><%= p.naziv %> (<%= p.ects %> ECTS)</option>
+            <% }); %>
+          </select>
+          <button class="btn primary" type="submit">Upisi</button>
+        </form>
+      <% } %>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="bs">
+  <head>
+    <meta charset="UTF-8" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      header h1 {
+        font-size: 2.8em;
+        margin: 0 0 10px;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+      header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+        margin: 0;
+      }
+      h2 {
+        margin-top: 40px;
+        margin-bottom: 18px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 8px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+      }
+      .grid.stacked {
+        grid-template-columns: 1fr;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 14px;
+        padding: 20px;
+        text-decoration: none;
+        color: #fff;
+        transition: transform 0.2s ease, background 0.2s ease;
+        backdrop-filter: blur(6px);
+      }
+      .card:hover {
+        transform: translateY(-4px);
+        background: rgba(255, 255, 255, 0.22);
+      }
+      .card .emoji {
+        font-size: 2.2em;
+        display: block;
+        margin-bottom: 8px;
+      }
+      .card .name {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin-bottom: 6px;
+      }
+      .card .route {
+        font-family: monospace;
+        font-size: 0.9em;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 3px 8px;
+        border-radius: 5px;
+        display: inline-block;
+        margin-bottom: 8px;
+      }
+      .card .desc {
+        font-size: 0.9em;
+        opacity: 0.9;
+        margin: 0;
+      }
+      .sub-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .sub-links a {
+        background: rgba(0, 0, 0, 0.3);
+        color: #fff;
+        text-decoration: none;
+        padding: 4px 10px;
+        border-radius: 5px;
+        font-size: 0.85em;
+        font-family: monospace;
+      }
+      .sub-links a:hover { background: rgba(0, 0, 0, 0.5); }
+      footer {
+        text-align: center;
+        margin-top: 50px;
+        opacity: 0.7;
+        font-size: 0.9em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+
+      <!-- ============================================== -->
+      <!-- -V10 AUTH BAR — prikaz prijavljenog korisnika    -->
+      <!-- `korisnik` dolazi iz res.locals (postavljeno u   -->
+      <!-- app.js middleware-u). Ako je null, korisnik nije -->
+      <!-- prijavljen.                                       -->
+      <!-- ============================================== -->
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:10px;align-items:center;">
+        <% if (korisnik) { %>
+          <span style="opacity:0.9;">Prijavljen kao <strong><%= korisnik.korisnicko_ime %></strong></span>
+          <form method="POST" action="/logout" style="margin:0;">
+            <button type="submit" style="background:rgba(255,80,80,0.3);color:#fff;border:1px solid rgba(255,120,120,0.5);padding:8px 14px;border-radius:8px;cursor:pointer;">Odjavi se</button>
+          </form>
+        <% } else { %>
+          <a href="/login" style="background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);">Prijavi se</a>
+          <a href="/registracija" style="background:rgba(80,200,120,0.4);color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;border:1px solid rgba(80,200,120,0.6);">Registruj se</a>
+        <% } %>
+      </div>
+
+      <header>
+        <h1>🌐 <%= title %></h1>
+        <p>Početna stranica — pregled svih dostupnih ruta</p>
+      </header>
+
+      <h2>🎲 API rute (činjenice i šale)</h2>
+      <div class="grid stacked">
+        <a class="card" href="/fun-facts">
+          <span class="emoji">💡</span>
+          <div class="name">Fun Facts</div>
+          <div class="route">/fun-facts</div>
+          <p class="desc">Opšte zanimljive činjenice</p>
+          <div class="sub-links">
+            <a href="/fun-facts">/fun-facts</a>
+            <a href="/fun-facts/object">/object</a>
+            <a href="/fun-facts/5">/5</a>
+          </div>
+        </a>
+
+        <a class="card" href="/cat">
+          <span class="emoji">🐱</span>
+          <div class="name">Cat Facts</div>
+          <div class="route">/cat</div>
+          <p class="desc">Nasumične činjenice o mačkama</p>
+          <div class="sub-links">
+            <a href="/cat">/cat</a>
+            <a href="/cat/5">/cat/5</a>
+            <a href="/cat/10?json=1">JSON</a>
+          </div>
+        </a>
+
+        <a class="card" href="/dog">
+          <span class="emoji">🐶</span>
+          <div class="name">Dog Facts</div>
+          <div class="route">/dog</div>
+          <p class="desc">Nasumične činjenice o psima</p>
+          <div class="sub-links">
+            <a href="/dog">/dog</a>
+            <a href="/dog/3">/dog/3</a>
+            <a href="/dog/10?json=1">JSON</a>
+          </div>
+        </a>
+
+        <a class="card" href="/chuck">
+          <span class="emoji">🥋</span>
+          <div class="name">Chuck Norris</div>
+          <div class="route">/chuck</div>
+          <p class="desc">Nasumične Chuck Norris šale</p>
+          <div class="sub-links">
+            <a href="/chuck">/chuck</a>
+            <a href="/chuck/5">/chuck/5</a>
+            <a href="/chuck/10?json=1">JSON</a>
+          </div>
+        </a>
+      </div>
+
+      <!-- -V10 Sekcija "Baza podataka" se prikazuje SAMO prijavljenim korisnicima -->
+      <% if (korisnik) { %>
+        <h2>🗄️ Baza podataka (SQLite) <small style="opacity:0.7;font-size:0.6em;">— samo za prijavljene</small></h2>
+        <div class="grid">
+          <a class="card" href="/studenti">
+            <span class="emoji">👥</span>
+            <div class="name">Studenti</div>
+            <div class="route">/studenti</div>
+            <p class="desc">Kompletan CRUD + N:M veza sa predmetima</p>
+            <div class="sub-links">
+              <a href="/studenti">lista</a>
+              <a href="/studenti/novi">+ novi</a>
+            </div>
+          </a>
+
+          <a class="card" href="/predmeti">
+            <span class="emoji">📚</span>
+            <div class="name">Predmeti</div>
+            <div class="route">/predmeti</div>
+            <p class="desc">CRUD nad predmetima (drugi primjer)</p>
+            <div class="sub-links">
+              <a href="/predmeti">lista</a>
+              <a href="/predmeti/novi">+ novi</a>
+            </div>
+          </a>
+
+          <!-- -V12 NOVO: AJAX CRUD demo (zadaci) -->
+          <a class="card" href="/zadaci">
+            <span class="emoji">✅</span>
+            <div class="name">Zadaci (AJAX)</div>
+            <div class="route">/zadaci</div>
+            <p class="desc">Isti CRUD, ali kroz fetch + JSON API (bez reload-a)</p>
+            <div class="sub-links">
+              <a href="/zadaci">stranica</a>
+              <a href="/api/zadaci">/api JSON</a>
+            </div>
+          </a>
+        </div>
+      <% } else { %>
+        <!-- Kratka poruka da je sadrzaj zakljucan -->
+        <div style="background:rgba(0,0,0,0.2);border:1px dashed rgba(255,255,255,0.3);border-radius:12px;padding:24px;text-align:center;margin-top:20px;">
+          <h2 style="margin:0 0 6px 0;border:none;">🔒 Studenti i predmeti</h2>
+          <p style="opacity:0.85;margin:6px 0 14px;">Da bi pristupio bazi podataka, prijavi se ili registruj.</p>
+          <a href="/login" style="background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);margin-right:6px;">Prijavi se</a>
+          <a href="/registracija" style="background:rgba(80,200,120,0.4);color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;border:1px solid rgba(80,200,120,0.6);">Registruj se</a>
+        </div>
+      <% } %>
+
+      <h2>🛠️ Ostale rute</h2>
+      <div class="grid">
+        <a class="card" href="/users">
+          <span class="emoji">👤</span>
+          <div class="name">Users</div>
+          <div class="route">/users</div>
+          <p class="desc">Primjer users rute</p>
+        </a>
+
+        <a class="card" href="/test">
+          <span class="emoji">🧪</span>
+          <div class="name">Test</div>
+          <div class="route">/test</div>
+          <p class="desc">Test ruta</p>
+        </a>
+
+        <a class="card" href="/druga-ruta">
+          <span class="emoji">🔀</span>
+          <div class="name">Druga ruta</div>
+          <div class="route">/druga-ruta</div>
+          <p class="desc">Primjer dodatne rute</p>
+        </a>
+
+        <a class="card" href="/routes">
+          <span class="emoji">📋</span>
+          <div class="name">Sve rute (JSON)</div>
+          <div class="route">/routes</div>
+          <p class="desc">Lista svih endpointa aplikacije</p>
+        </a>
+      </div>
+
+      <footer>
+        <p>Express + EJS · PMF 2025/2026</p>
+      </footer>
+    </div>
+  </body>
+</html>
